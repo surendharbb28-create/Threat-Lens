@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThreatLens — Scan History</title>
+{% load static %}
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;600;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div class="scanlines"></div>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 40 40" fill="none">
+        <polygon points="20,2 38,12 38,28 20,38 2,28 2,12" stroke="#00ff88" stroke-width="1.5" fill="none"/>
+        <circle cx="20" cy="20" r="4" fill="#00ff88"/>
+      </svg>
+      <span class="brand-name">THREAT<span class="accent">LENS</span></span>
+    </div>
+    <nav class="site-nav">
+      <a href="/" class="nav-link">SCANNER</a>
+      <a href="/history/" class="nav-link active">HISTORY</a>
+    </nav>
+    <div class="header-status">
+      <span class="status-dot"></span>
+      <span class="status-text">SYSTEMS ONLINE</span>
+    </div>
+  </div>
+</header>
+
+<section class="history-hero">
+  <div class="hero-label">THREAT INTELLIGENCE PLATFORM</div>
+  <h1 class="hero-title">Scan <span class="accent">History</span></h1>
+</section>
+
+<main class="history-main">
+  <!-- Filters -->
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">ALL</button>
+    <button class="filter-btn" data-filter="file">FILES</button>
+    <button class="filter-btn" data-filter="url">URLs</button>
+    <button class="filter-btn" data-filter="clean">CLEAN</button>
+    <button class="filter-btn" data-filter="threat">THREATS</button>
+  </div>
+
+  {% if scans %}
+  <div class="history-table-wrap">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>TYPE</th>
+          <th>TARGET</th>
+          <th>THREAT LEVEL</th>
+          <th>RISK SCORE</th>
+          <th>FINDINGS</th>
+          <th>SCANNED</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody">
+        {% for scan in scans %}
+        <tr class="history-row" data-type="{{ scan.scan_type }}" data-level="{{ scan.threat_level|lower }}">
+          <td><span class="type-badge {{ scan.scan_type }}">{{ scan.scan_type|upper }}</span></td>
+          <td class="target-cell" title="{{ scan.target }}">
+            <span class="target-text">{{ scan.target }}</span>
+          </td>
+          <td><span class="level-badge {{ scan.threat_level|lower }}">{{ scan.threat_level }}</span></td>
+          <td>
+            <div class="score-bar-wrap">
+              <div class="score-bar" style="width:{{ scan.risk_score }}%; background: var(--score-{{ scan.threat_level|lower }})"></div>
+              <span class="score-num">{{ scan.risk_score }}</span>
+            </div>
+          </td>
+          <td class="center">{{ scan.findings_count }}</td>
+          <td class="date-cell">{{ scan.created_at|slice:":19"|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <svg viewBox="0 0 64 64" fill="none" width="64">
+      <circle cx="32" cy="32" r="28" stroke="#00ff88" stroke-width="1.5" fill="none" opacity="0.3"/>
+      <circle cx="32" cy="32" r="16" stroke="#00ff88" stroke-width="1.5" fill="none" opacity="0.5"/>
+      <circle cx="32" cy="32" r="4" fill="#00ff88"/>
+    </svg>
+    <p>No scans yet. <a href="/">Run your first scan →</a></p>
+  </div>
+  {% endif %}
+</main>
+
+<footer class="site-footer">
+  <p>ThreatLens &copy; 2024 — Threat Intelligence Platform · Built with Django + MongoDB</p>
+</footer>
+
+<script>
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filter = btn.dataset.filter;
+    document.querySelectorAll('.history-row').forEach(row => {
+      const type = row.dataset.type;
+      const level = row.dataset.level;
+      let show = filter === 'all'
+        || filter === type
+        || (filter === 'clean' && level === 'clean')
+        || (filter === 'threat' && ['high','critical'].includes(level));
+      row.style.display = show ? '' : 'none';
+    });
+  });
+});
+</script>
+</body>
+</html>
